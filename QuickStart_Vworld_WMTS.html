@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.137/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.137/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script type="module">
+    // Your access token can be found at: https://ion.cesium.com/tokens.
+    // This is the default access token from your ion account.
+    Cesium.Ion.defaultAccessToken = '사용자 토큰을 입력하세요';
+
+    const vworldApiKey = '사용자 인증키를 입력하세요';
+    const vworldDomain = 'http://127.0.0.1:5500';
+
+    // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrain: Cesium.Terrain.fromWorldTerrain(),
+    });    
+
+    // Fly the camera to San Francisco at the given longitude, latitude, and height.
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(127.0, 36.0, 1500000),
+    });
+    // Add Cesium OSM Buildings, a global 3D buildings layer.
+    const buildingTileset = await Cesium.createOsmBuildingsAsync();
+    viewer.scene.primitives.add(buildingTileset);   
+
+    const vworldWms = new Cesium.WebMapServiceImageryProvider({
+      url: `https://api.vworld.kr/req/wms?key=${vworldApiKey}`,
+      layers: 'lt_c_adsido',    // 광역시도 경계
+      parameters: {
+        service: 'WMS',
+        request: 'GetMap',
+        version: '1.3.0',
+        format: 'image/png',
+        transparent: true,
+        crs: 'EPSG:4326',
+        domain: vworldDomain
+      }
+    });
+
+    // viewer.imageryLayers.addImageryProvider(vworldWms);
+
+    const wfsUrl =
+      'https://api.vworld.kr/req/wfs?' +
+      'service=WFS' +
+      '&request=GetFeature' +
+      '&version=1.1.0' +
+      '&typeName=lt_c_adsido_info' +
+      '&output=json' +
+      '&srsName=EPSG:4326' +
+      '&key=' + vworldApiKey;
+
+    const vworldWfs = await Cesium.GeoJsonDataSource.load(wfsUrl);
+
+    vworldWfs.entities.values.forEach(entity => {
+      if (!entity.polygon) return;
+
+      const hierarchy = entity.polygon.hierarchy.getValue(
+        Cesium.JulianDate.now()
+      );
+
+      // viewer.entities.add({
+      //   polyline: {
+      //     positions: hierarchy.positions,
+      //     width: 2, 
+      //     material: Cesium.Color.YELLOW,
+      //     clampToGround: true
+      //   }
+      // });
+    });
+
+    // VWorld 기본 영상지도 추가 (WMTS)
+    const wmts = new Cesium.WebMapTileServiceImageryProvider({
+      url: 'http://api.vworld.kr/req/wmts/1.0.0/' + vworldApiKey + '/Base/{TileMatrix}/{TileRow}/{TileCol}.png'
+    });
+    
+    viewer.imageryLayers.addImageryProvider(wmts);
+
+  </script>
+ </div>
+</body>
+</html>

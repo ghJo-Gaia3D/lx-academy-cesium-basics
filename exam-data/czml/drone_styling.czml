@@ -1,0 +1,47 @@
+[
+    {
+        "id": "document",
+        "name": "드론 서울 투어",
+        "version": "1.0",
+        "clock": {
+            "interval": "2026-01-01T00:00:00Z/2026-01-01T00:10:00Z",
+            "currentTime": "2026-01-01T00:00:00Z",
+            "multiplier": 10,
+            "range": "LOOP_STOP",
+            "step": "SYSTEM_CLOCK_MULTIPLIER"
+        }
+    },
+    {
+        "id": "drone",
+        "name": "드론",
+        "position": {
+            "interpolationAlgorithm": "LAGRANGE",
+            "cartographicDegrees": [
+                "2026-01-01T00:00:00Z", 126.977, 37.576, 100,
+                "2026-01-01T00:03:00Z", 126.988, 37.551, 500,
+                "2026-01-01T00:07:00Z", 127.102, 37.513, 600,
+                "2026-01-01T00:10:00Z", 126.889, 37.571, 100
+            ]
+        },
+        "point": {
+            "pixelSize": 12,
+            "color": { "rgba": [0, 180, 255, 255] }
+        },
+        "label": {
+            "text": "드론 투어",
+            "fillColor": { "rgba": [255, 255, 255, 255] },
+            "outlineColor": { "rgba": [0, 100, 0, 255] },
+            "outlineWidth": 2, 
+            "style": "FILL_AND_OUTLINE", 
+            "pixelOffset": { "cartesian2": [0, 30] }
+        },
+        "path": {
+            "material": {
+                "solidColor": { "color": { "rgba": [255, 200, 0, 200] } }
+            },
+            "width": 3,
+            "leadTime": 0,
+            "trailTime": 60
+        }
+    }
+]

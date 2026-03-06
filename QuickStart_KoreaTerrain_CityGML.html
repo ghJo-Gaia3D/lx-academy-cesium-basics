@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.137/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.137/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script type="module">
+    // Your access token can be found at: https://ion.cesium.com/tokens.
+    // This is the default access token from your ion account.
+    Cesium.Ion.defaultAccessToken = '사용자 토큰을 입력하세요';
+
+    // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      // terrain: Cesium.Terrain.fromWorldTerrain(),
+      terrain: new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromIonAssetId(4480861)),
+    });    
+
+    const cityGmlTileset = viewer.scene.primitives.add(
+      await Cesium.Cesium3DTileset.fromIonAssetId(4484809),
+    );
+
+    viewer.zoomTo(cityGmlTileset);
+
+  </script>
+ </div>
+</body>
+</html>

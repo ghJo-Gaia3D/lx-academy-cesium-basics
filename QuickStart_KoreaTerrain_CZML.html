@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.137/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.137/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script type="module">
+    // Your access token can be found at: https://ion.cesium.com/tokens.
+    // This is the default access token from your ion account.
+    Cesium.Ion.defaultAccessToken = '사용자 토큰을 입력하세요';
+
+    // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      // terrain: Cesium.Terrain.fromWorldTerrain(),
+      terrain: new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromIonAssetId(4480861)),
+    });    
+
+    // // Fly the camera to San Francisco at the given longitude, latitude, and height.
+    // viewer.camera.flyTo({
+    //   destination: Cesium.Cartesian3.fromDegrees(126.95, 37.52, 15000),
+    // });
+
+    // Add Cesium OSM Buildings, a global 3D buildings layer.
+    const buildingTileset = await Cesium.createOsmBuildingsAsync();
+    viewer.scene.primitives.add(buildingTileset);   
+
+    const czmlDataSource = await Cesium.CzmlDataSource.load('./exam-data/czml/drone.czml');
+    viewer.dataSources.add(czmlDataSource);
+    viewer.zoomTo(czmlDataSource);
+
+
+  </script>
+ </div>
+</body>
+</html>

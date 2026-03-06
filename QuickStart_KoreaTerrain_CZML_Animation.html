@@ -1,0 +1,54 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.137/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.137/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script type="module">
+    // Your access token can be found at: https://ion.cesium.com/tokens.
+    // This is the default access token from your ion account.
+    Cesium.Ion.defaultAccessToken = '사용자 토큰을 입력하세요';
+
+    // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      // terrain: Cesium.Terrain.fromWorldTerrain(),
+      terrain: new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromIonAssetId(4480861)),
+    });    
+
+    // Add Cesium OSM Buildings, a global 3D buildings layer.
+    const buildingTileset = await Cesium.createOsmBuildingsAsync();
+    viewer.scene.primitives.add(buildingTileset);   
+
+    // const czmlDataSource = await Cesium.CzmlDataSource.load('./exam-data/czml/drone.czml');
+    const czmlDataSource = await Cesium.CzmlDataSource.load('./exam-data/czml/drone_styling.czml');
+    
+    viewer.dataSources.add(czmlDataSource);
+    viewer.zoomTo(czmlDataSource);
+
+    // CZML clock 추적 해제 + clock 값 재설정을
+    // 한 프레임 뒤에 실행 (Cesium 내부 처리가 끝난 후 적용)
+    setTimeout(() => {
+      const clock = viewer.clock;
+      // clock.multiplier = 1;         // ← 여기 숫자만 바꿔서 실험
+      clock.multiplier = 10;
+      // clock.multiplier = 60;
+
+      clock.shouldAnimate = true;
+
+      // clock.clockRange = Cesium.ClockRange.LOOP_STOP; // 반복 재생
+      clock.clockRange = Cesium.ClockRange.UNBOUNDED; // 계속 진행
+
+      //   드론 Entity를 가져와 카메라가 드론을 따라가도록 설정
+      //   → 재생 시 드론이 화면 중앙에 고정된 채 이동하는 것을 확인
+      const drone = czmlDataSource.entities.getById('drone');
+      viewer.trackedEntity = drone;
+    }, 0);
+
+  </script>
+ </div>
+</body>
+</html>

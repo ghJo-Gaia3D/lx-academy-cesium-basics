@@ -1,0 +1,81 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.137/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.137/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script type="module">
+    // Your access token can be found at: https://ion.cesium.com/tokens.
+    // This is the default access token from your ion account.
+    Cesium.Ion.defaultAccessToken = '사용자 토큰을 입력하세요';
+
+    // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      // terrain: Cesium.Terrain.fromWorldTerrain(),
+      terrain: new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromIonAssetId(4480861)),
+    });    
+
+    // Add Cesium OSM Buildings, a global 3D buildings layer.
+    const buildingTileset = await Cesium.createOsmBuildingsAsync();
+    viewer.scene.primitives.add(buildingTileset);   
+
+    // const czmlDataSource = await Cesium.CzmlDataSource.load('./exam-data/czml/drone.czml');
+    const czmlDataSource = await Cesium.CzmlDataSource.load('./exam-data/czml/drone_styling.czml');
+    
+    viewer.dataSources.add(czmlDataSource);
+    viewer.zoomTo(czmlDataSource);
+
+    // CZML clock 추적 해제 + clock 값 재설정을
+    // 한 프레임 뒤에 실행 (Cesium 내부 처리가 끝난 후 적용)
+    // Cesium 내부 처리 완료 후 실행 (setTimeout으로 한 프레임 대기)
+    setTimeout(async () => {
+
+      // 시계 설정
+      const clock = viewer.clock;
+      clock.multiplier    = 10;                          // 10배속 재생
+      clock.shouldAnimate = true;                        // 자동 재생
+      clock.clockRange    = Cesium.ClockRange.UNBOUNDED; // 계속 진행
+
+      // 드론 Entity 가져오기
+      const drone = czmlDataSource.entities.getById('drone');
+      viewer.trackedEntity = drone; // 카메라가 드론을 따라가도록 설정
+
+      // CZML의 point 제거 → GLB 모델로 교체
+      drone.point = undefined;
+
+      // ion에서 드론 GLB 모델 리소스 로드
+      const droneModelResource = await Cesium.IonResource.fromAssetId(4505717);
+
+      drone.model = new Cesium.ModelGraphics({
+        uri             : droneModelResource, // 드론 GLB 파일 경로
+        minimumPixelSize: 64,                 // 멀리서도 최소 64px 크기 유지
+        maximumScale    : 20000,              // 너무 가까울 때 무한정 커지는 것 방지
+        scale           : 1.0,               // 기본 크기 배율
+      });
+
+      // 궤적(path) 두께 변경
+      drone.path.width = new Cesium.ConstantProperty(5);
+
+      // onTick: 매 프레임마다 고도를 체크해서 모델 크기 실시간 변경
+      viewer.clock.onTick.addEventListener((clock) => {
+        const pos = drone.position.getValue(clock.currentTime);
+        if (!pos) return; // 위치가 없으면 건너뜀
+
+        // Cartesian3(3D 좌표) → Cartographic(위경도+고도)로 변환
+        const carto = Cesium.Cartographic.fromCartesian(pos);
+        const altM  = carto.height; // 현재 고도 (미터)
+
+        // 고도 400m 이상이면 모델을 2배 크게, 이하면 기본 크기
+        drone.model.scale = new Cesium.ConstantProperty(altM > 400 ? 2.0 : 1.0);
+      });
+
+    }, 0);
+
+  </script>
+ </div>
+</body>
+</html>
